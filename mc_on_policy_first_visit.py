@@ -192,6 +192,7 @@ def update_plot(ax, total_rewards):
     plt.pause(0.1)  # Pause briefly to allow updates
 
 if __name__ == "__main__":
+    
     num_episodes = 200
     epsilon_0 = 0.5  # Epsilon_0
     epsilon_decay = 0.999
@@ -201,6 +202,7 @@ if __name__ == "__main__":
     gamma = 1
 
     env = gym.make("Gym-Gridworlds/Ex2-4x4-v0", render_mode="human")
+    
     env.reset()
     env.render()
     print("Action space is {} ".format(env.action_space))
@@ -211,8 +213,5 @@ if __name__ == "__main__":
     Q_mc, policy = mc_on_policy_first_visit_epsilon_soft(
         env, num_episodes, epsilon_0, epsilon_min, epsilon_decay, gamma, plot=True
     )
-
-    
-
-    
+   
     env.close()
