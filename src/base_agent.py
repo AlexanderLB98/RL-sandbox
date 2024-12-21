@@ -55,9 +55,12 @@ class BaseAgent(ABC):
         )
 
         self.episode_df = []
+<<<<<<< HEAD
         self.plot = plot
 
 
+=======
+>>>>>>> main
 
     @abstractmethod
     def train(self):
@@ -71,7 +74,11 @@ class BaseAgent(ABC):
         """
         Initializes the plot and sets up interactive mode to allow non-blocking updates during training.
         """
+<<<<<<< HEAD
         # plt.ion()  # Enable interactive mode
+=======
+        plt.ion()  # Enable interactive mode
+>>>>>>> main
         self.fig, self.ax = plt.subplots(3)  # Create a new figure and axis
         self.ax[0].set_title("Total Rewards per Episode")
         self.ax[0].set_xlabel("Episode")
@@ -95,11 +102,19 @@ class BaseAgent(ABC):
             total_rewards: List of total rewards for each episode.
         """
         self.ax[0].clear()  # Clear the previous plot
+<<<<<<< HEAD
         self.ax[0].plot(self.episode_df["reward"])  # Plot the new data
         self.ax[1].clear()  # Clear the previous plot
         self.ax[1].plot(self.episode_df["step"])  # Plot the new data
         self.ax[2].clear()  # Clear the previous plot
         self.ax[2].plot(self.episode_df["action"])  # Plot the new data
+=======
+        self.ax[0].plot(self.episode_df[0])  # Plot the new data
+        self.ax[1].clear()  # Clear the previous plot
+        self.ax[1].plot(self.episode_df[1])  # Plot the new data
+        self.ax[2].clear()  # Clear the previous plot
+        self.ax[2].plot(self.episode_df[2])  # Plot the new data
+>>>>>>> main
         #        self.ax.set_title("Total Rewards per Episode")
         #        self.ax.set_xlabel("Episode")
         #        self.ax.set_ylabel("Total Reward")
@@ -147,7 +162,11 @@ class BaseAgent(ABC):
                 action = np.random.choice(len(probs), p=probs)  # Probs do not sum 1
                 return action
 
+<<<<<<< HEAD
         return policy_fn
+=======
+            return policy_fn
+>>>>>>> main
 
     def print_policy(self, policy, height, width):
         switch_action = {

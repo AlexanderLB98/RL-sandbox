@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: Gym-Gridworlds
+Version: 1.0
+Author: Simone Parisi
+License: CC-BY-4.0
+License-File: LICENSE
+Requires-Dist: gymnasium
+Requires-Dist: pygame

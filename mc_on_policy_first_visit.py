@@ -1,12 +1,18 @@
 from collections import defaultdict
-import matplotlib.pyplot as plt
+
 import gym_gridworlds
 import gymnasium as gym
+import matplotlib.pyplot as plt
 import numpy as np
 
+<<<<<<< HEAD
 from src.data_visualizer import initialize_plot, update_plot
 from src.policies import make_policy
 from src.utils import print_policy
+=======
+from src.data_visualizer import initialize_plot, print_policy, update_plot
+from src.policies import make_policy
+>>>>>>> main
 
 
 def mc_on_policy_first_visit_epsilon_soft(
@@ -18,6 +24,8 @@ def mc_on_policy_first_visit_epsilon_soft(
     # Almacenamos la suma y el número de retornos de cada estado para calcular
     # el promedio. Podríamos usar un array para guardar todos los retornos
     # (como en el libro) pero es ineficiente en términos de memoria.
+    policy_method = "epsilon_soft"
+    policy_method = "epsilon_greedy"
     returns_sum = defaultdict(float)
     returns_count = defaultdict(float)
 
@@ -32,7 +40,7 @@ def mc_on_policy_first_visit_epsilon_soft(
         lambda: np.zeros(env.action_space.n)
     )  # Inicializo política aleatoria (map state with action)
     # Initialize epsilon-soft arbitrary policy
-    policy = make_epsilon_soft_policy(Q, epsilon, num_Actions=5)
+    policy = make_policy(Q, epsilon, env.action_space.n, method=policy_method)
 
     # Loop over all episones
     for n in range(num_episodes):
@@ -46,12 +54,10 @@ def mc_on_policy_first_visit_epsilon_soft(
         t, total_reward, terminated, truncated = 0, 0, False, False
         done = terminated or truncated
         while not done:
-            policy = make_epsilon_soft_policy(
-                Q, epsilon, num_Actions=env.action_space.n
-            )
-            probs = policy(obs)
-            action = np.random.choice(len(probs), p=probs)  # Probs do not sum 1
-
+            policy = make_policy(Q, epsilon, env.action_space.n, method=policy_method)
+            #probs = policy(obs)
+            # action = np.random.choice(len(probs), p=probs)  # Probs do not sum 1
+            action = policy(state=obs)
             # Ejecutar la acción y esperar la respuesta del entorno
             new_obs, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
@@ -85,11 +91,10 @@ def mc_on_policy_first_visit_epsilon_soft(
                 Q[state][action] = returns_sum[sa_pair] / returns_count[sa_pair]
                 # La política se mejora implícitamente al ir cambiando los valores de Q
 
-            
             # Update epsilon for next episode
             epsilon = max(epsilon * epsilon_decay, 0.01)
             # Update policy for next episode
-            policy = make_epsilon_soft_policy(Q, epsilon, num_Actions=5)
+            policy = make_policy(Q, epsilon, env.action_space.n, method=policy_method)
 
             # Actualizar variables
             episode.append((obs, action, reward, terminated, truncated, info))
@@ -102,6 +107,8 @@ def mc_on_policy_first_visit_epsilon_soft(
         # plot_rewards(reward_ep)
         if plot:
             update_plot(ax, reward_ep)
+        if n % 10 == 0:
+            print_policy(policy, 4, 4)
 
     print_policy(policy, 4, 4)
 
@@ -112,54 +119,6 @@ def mc_on_policy_first_visit_epsilon_soft(
 
     return Q, policy
 
-def print_policy(policy, height, width):
-    switch_action = {
-        0: "Left",
-        1: "Down",
-        2: "Right",
-        3: "Up",
-        4: "Stay",
-    }
-    
-    for row in range(height):
-        print("------------------------------------------------------------------------------------------")
-        for col in range(width):
-            state = row * width + col      # Mapeo de (row, col) a estado lineal
-            arr = np.array(policy(state))  # Obtenemos las probabilidades para el estado actual
-            act = int(np.argmax(arr))      # Elegimos la acción con la máxima probabilidad
-            action_str = switch_action[act]
-            print("  %s  |" % action_str, end="")
-        print("")
-
-    print("------------------------------------------------------------------------------------------")
-
-
-def initialize_plot():
-    """
-    Initializes the plot and sets up interactive mode to allow non-blocking updates during training.
-    """
-    plt.ion()  # Enable interactive mode
-    fig, ax = plt.subplots()  # Create a new figure and axis
-    ax.set_title('Total Rewards per Episode')
-    ax.set_xlabel('Episode')
-    ax.set_ylabel('Total Reward')
-    return fig, ax
-
-def update_plot(ax, total_rewards):
-    """
-    Updates the plot with the new total_rewards data.
-    
-    Args:
-        ax: The axis object where the plot is drawn.
-        total_rewards: List of total rewards for each episode.
-    """
-    ax.clear()  # Clear the previous plot
-    ax.plot(total_rewards)  # Plot the new data
-    ax.set_title('Total Rewards per Episode')
-    ax.set_xlabel('Episode')
-    ax.set_ylabel('Total Reward')
-    plt.draw()  # Redraw the plot
-    plt.pause(0.1)  # Pause briefly to allow updates
 
 if __name__ == "__main__":
 
@@ -172,18 +131,15 @@ if __name__ == "__main__":
     gamma = 1
 
     env = gym.make("Gym-Gridworlds/Ex2-4x4-v0", render_mode="human")
+
     env.reset()
     env.render()
     print("Action space is {} ".format(env.action_space))
     print("Observation space is {} ".format(env.observation_space))
-
 
     ######################## SOLUCIÓN ###########################
     Q_mc, policy = mc_on_policy_first_visit_epsilon_soft(
         env, num_episodes, epsilon_0, epsilon_min, epsilon_decay, gamma, plot=True
     )
 
-    
-
-    
     env.close()
