@@ -4,39 +4,9 @@ import gym_gridworlds
 import gymnasium as gym
 import numpy as np
 
-
-def make_epsilon_soft_policy(Q, epsilon, num_Actions=5):
-    """
-    Crea una política epsilon-soft basada en una función de valor de acción Q y epsilon
-
-    Args:
-        Q: Un diccionario cuya correspondencia es state -> action-values.
-           Cada valor es un array de numpy de longitud num_Actions (see below)
-        epsilon: La probabilidad de seleccionar una acción aleatoria (float entre 0 and 1).
-        num_Actions: Número de acciones del entorno. En este caso será 5.
-
-    Returns:
-        Una función que tome como argumento la observación y devuelva como resultado
-        las probabilidades de cada acción como un array de numpy de longitud num_Actions.
-    """
-
-    def policy_fn(observation) -> np.ndarray:
-
-        A = np.ones(num_Actions, dtype=float) * epsilon / num_Actions
-        best_action = np.argmax(Q[observation])
-        A[best_action] += (
-            1.0 - epsilon
-        ) / num_Actions  # Aumenta la probabilidad de la mejor accion
-        # En teoría para que sea epsilon soft debería dividirse la linea anterior entre num_actions, pero entonces la
-        # prob no me da 1 y habŕía que normalizar.
-
-        # Normalizar las probabilidades para que sumen 1
-        sum_probs = np.sum(A)
-        normalized_probs = A / sum_probs
-
-        return normalized_probs  # Action probability
-
-    return policy_fn
+from src.data_visualizer import initialize_plot, update_plot
+from src.policies import make_policy
+from src.utils import print_policy
 
 
 def mc_on_policy_first_visit_epsilon_soft(
@@ -192,9 +162,10 @@ def update_plot(ax, total_rewards):
     plt.pause(0.1)  # Pause briefly to allow updates
 
 if __name__ == "__main__":
+
     num_episodes = 200
     epsilon_0 = 0.5  # Epsilon_0
-    epsilon_decay = 0.999
+    epsilon_decay = 0.9
     epsilon_min = 0.05
     # Update epsilon for next episode
     epsilon = max(epsilon_0 * epsilon_decay, 0.01)
