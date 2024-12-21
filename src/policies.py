@@ -1,34 +1,73 @@
+"""
+Métodos de selección de acción según diferentes políticas.
+"""
+
 import numpy as np
 
-def make_epsilon_soft_policy(Q, epsilon, num_Actions=5):
+from src.utils import max_dict
+
+def make_policy(Q, epsilon, num_actions, method="epsilon_greedy"):
     """
-    Crea una política epsilon-soft basada en una función de valor de acción Q y epsilon
+    Genera una política basada en Q usando epsilon-greedy o epsilon-soft.
 
     Args:
-        Q: Un diccionario cuya correspondencia es state -> action-values.
-           Cada valor es un array de numpy de longitud num_Actions (see below)
-        epsilon: La probabilidad de seleccionar una acción aleatoria (float entre 0 and 1).
-        num_Actions: Número de acciones del entorno. En este caso será 5.
+        Q: Diccionario donde cada estado mapea a los valores Q(s, a).
+        epsilon: Nivel de exploración (0 a 1).
+        num_actions: Número de acciones posibles.
+        method: Método a usar ('epsilon_greedy' o 'epsilon_soft').
 
     Returns:
-        Una función que tome como argumento la observación y devuelva como resultado
-        las probabilidades de cada acción como un array de numpy de longitud num_Actions.
+        policy_fn: Función que, dado un estado, devuelve la acción o las probabilidades.
     """
+    if method not in ["epsilon_greedy", "epsilon_soft"]:
+        raise ValueError("Invalid method. Choose 'epsilon_greedy' or 'epsilon_soft'.")
 
-    def policy_fn(observation) -> np.ndarray:
+    def policy_fn(state):
+        q_values = Q[state]
 
-        A = np.ones(num_Actions, dtype=float) * epsilon / num_Actions
-        best_action = np.argmax(Q[observation])
-        A[best_action] += (
-            1.0 - epsilon
-        ) / num_Actions  # Aumenta la probabilidad de la mejor accion
-        # En teoría para que sea epsilon soft debería dividirse la linea anterior entre num_actions, pero entonces la
-        # prob no me da 1 y habŕía que normalizar.
+        if method == "epsilon_greedy":
+            if np.random.rand() < epsilon:
+                # Exploración: Selecciona una acción aleatoria
+                return np.random.choice(num_actions)
+            else:
+                # Explotación: Selecciona la acción con mayor valor Q
+                # return np.argmax(q_values)
+                return max_dict(q_values)[0]
 
-        # Normalizar las probabilidades para que sumen 1
-        sum_probs = np.sum(A)
-        normalized_probs = A / sum_probs
-
-        return normalized_probs  # Action probability
+        elif method == "epsilon_soft":
+            # Probabilidades iniciales: Todas las acciones tienen probabilidad epsilon / num_actions
+            probs = np.ones(num_actions, dtype=float) * epsilon / num_actions
+            # Incrementa la probabilidad de la mejor acción
+            # best_action = np.argmax(q_values) Estoy usando np con un dict
+            # best_action = max(q_values, key=q_values.get)
+            best_action = max_dict(q_values)[0]
+            # print(f'Best action: {best_action}')
+            probs[best_action] += (1.0 - epsilon)
+            # Asegura que las probabilidades sumen 1
+            probs = probs / np.sum(probs)
+            # Selecciona una acción aleatoria con estas probs
+            action = np.random.choice(len(probs), p=probs)  # Probs do not sum 1
+            return action
 
     return policy_fn
+
+
+"""Ejemplo de uso"""
+if __name__ == "__main__":
+    Q = {"state_1": [2.0, 1.5, 3.2, 0.5, 1.0]}  # Diccionario de Q
+    epsilon = 0.3
+    num_actions = 5
+
+    # Crear política epsilon-greedy
+    epsilon_greedy_policy = make_policy(Q, epsilon, num_actions, method="epsilon_greedy")
+
+    # Seleccionar una acción para el estado 'state_1'
+    action = epsilon_greedy_policy("state_1")
+    print(f"Acción seleccionada (Epsilon-greedy): {action}")
+
+    # Crear política epsilon-soft
+    epsilon_soft_policy = make_policy(Q, epsilon, num_actions, method="epsilon_soft")
+
+    # Obtener las probabilidades para el estado 'state_1'
+    action_probs = epsilon_soft_policy("state_1")
+    print(f"Acción seleccionada (Epsilon-soft) {action_probs}")

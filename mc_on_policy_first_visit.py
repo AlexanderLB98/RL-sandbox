@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.data_visualizer import initialize_plot, print_policy, update_plot
-from src.policies import make_epsilon_soft_policy
+from src.policies import make_policy
 
 
 def mc_on_policy_first_visit_epsilon_soft(
@@ -18,6 +18,8 @@ def mc_on_policy_first_visit_epsilon_soft(
     # Almacenamos la suma y el número de retornos de cada estado para calcular
     # el promedio. Podríamos usar un array para guardar todos los retornos
     # (como en el libro) pero es ineficiente en términos de memoria.
+    policy_method = "epsilon_soft"
+    policy_method = "epsilon_greedy"
     returns_sum = defaultdict(float)
     returns_count = defaultdict(float)
 
@@ -32,7 +34,7 @@ def mc_on_policy_first_visit_epsilon_soft(
         lambda: np.zeros(env.action_space.n)
     )  # Inicializo política aleatoria (map state with action)
     # Initialize epsilon-soft arbitrary policy
-    policy = make_epsilon_soft_policy(Q, epsilon, num_Actions=5)
+    policy = make_policy(Q, epsilon, env.action_space.n, method=policy_method)
 
     # Loop over all episones
     for n in range(num_episodes):
@@ -46,12 +48,10 @@ def mc_on_policy_first_visit_epsilon_soft(
         t, total_reward, terminated, truncated = 0, 0, False, False
         done = terminated or truncated
         while not done:
-            policy = make_epsilon_soft_policy(
-                Q, epsilon, num_Actions=env.action_space.n
-            )
-            probs = policy(obs)
-            action = np.random.choice(len(probs), p=probs)  # Probs do not sum 1
-
+            policy = make_policy(Q, epsilon, env.action_space.n, method=policy_method)
+            #probs = policy(obs)
+            # action = np.random.choice(len(probs), p=probs)  # Probs do not sum 1
+            action = policy(state=obs)
             # Ejecutar la acción y esperar la respuesta del entorno
             new_obs, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
@@ -88,7 +88,7 @@ def mc_on_policy_first_visit_epsilon_soft(
             # Update epsilon for next episode
             epsilon = max(epsilon * epsilon_decay, 0.01)
             # Update policy for next episode
-            policy = make_epsilon_soft_policy(Q, epsilon, num_Actions=5)
+            policy = make_policy(Q, epsilon, env.action_space.n, method=policy_method)
 
             # Actualizar variables
             episode.append((obs, action, reward, terminated, truncated, info))
@@ -101,6 +101,8 @@ def mc_on_policy_first_visit_epsilon_soft(
         # plot_rewards(reward_ep)
         if plot:
             update_plot(ax, reward_ep)
+        if n % 10 == 0:
+            print_policy(policy, 4, 4)
 
     print_policy(policy, 4, 4)
 
