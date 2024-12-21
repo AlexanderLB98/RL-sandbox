@@ -38,7 +38,7 @@ class sarsa(BaseAgent):
 
         rewards = {}
 
-        columns = ["episode", "step", "state", "action", "reward", "next_state", "next_action"]
+        columns = ["episode", "step", "state", "action", "reward", "next_state", "next_action", "alpha", "epsilon", "gamma"]
         history = pd.DataFrame(columns=columns)
 
         self.initialize_plot()
@@ -70,7 +70,7 @@ class sarsa(BaseAgent):
                 rewards[episode] += reward
                 i += 1
 
-                episode_df.append([episode, i, obs, action1, reward, new_obs, action2])
+                episode_df.append([episode, i, obs, action1, reward, new_obs, action2, self.alpha, self.epsilon, self.gamma])
                 # history.append([obs, action1, reward, new_obs, action2]) # SARSA
                 self.Q[obs][action1] = self.Q[obs][action1] + self.alpha * (reward + self.gamma * q_next - self.Q[obs][action1])
 
@@ -84,7 +84,8 @@ class sarsa(BaseAgent):
 
 
             self.episode_df = pd.DataFrame(episode_df, columns=columns)
-            history = pd.concat([history, self.episode_df], ignore_index=True)
+            self.history = pd.concat([self.history, self.episode_df], ignore_index=True)
+            
             print(self.Q)
             print(f"Episodio {episode} completado en {i} pasos con recompensa {rewards[episode]}.")
             print(f"Last 5 actions:  { list(history['action'].iloc[-5:])}")

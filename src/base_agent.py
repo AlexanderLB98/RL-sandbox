@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from src.utils import max_dict
 
@@ -55,12 +56,11 @@ class BaseAgent(ABC):
         )
 
         self.episode_df = []
-<<<<<<< HEAD
+        columns = ["episode", "step", "state", "action", "reward", "next_state", "next_action", "alpha", "epsilon", "gamma"]
+        self.history = pd.DataFrame(columns=columns)
         self.plot = plot
 
 
-=======
->>>>>>> main
 
     @abstractmethod
     def train(self):
@@ -74,12 +74,9 @@ class BaseAgent(ABC):
         """
         Initializes the plot and sets up interactive mode to allow non-blocking updates during training.
         """
-<<<<<<< HEAD
         # plt.ion()  # Enable interactive mode
-=======
-        plt.ion()  # Enable interactive mode
->>>>>>> main
-        self.fig, self.ax = plt.subplots(3)  # Create a new figure and axis
+        subplots = 3
+        self.fig, self.ax = plt.subplots(subplots, figsize=(8,4*subplots))  # Create a new figure and axis
         self.ax[0].set_title("Total Rewards per Episode")
         self.ax[0].set_xlabel("Episode")
         self.ax[0].set_ylabel("Total Reward")
@@ -87,9 +84,7 @@ class BaseAgent(ABC):
         self.ax[1].set_xlabel("Episode")
         self.ax[1].set_ylabel("Timesteps")
 
-        self.ax[2].set_title("Epsilon, gamma per Episode")
-        self.ax[2].set_xlabel("Episode")
-        self.ax[2].set_ylabel("Epsilon, Gamma")
+        plt.tight_layout()
 
         return self.fig, self.ax
 
@@ -101,23 +96,36 @@ class BaseAgent(ABC):
             ax: The axis object where the plot is drawn.
             total_rewards: List of total rewards for each episode.
         """
-        self.ax[0].clear()  # Clear the previous plot
-<<<<<<< HEAD
-        self.ax[0].plot(self.episode_df["reward"])  # Plot the new data
-        self.ax[1].clear()  # Clear the previous plot
-        self.ax[1].plot(self.episode_df["step"])  # Plot the new data
-        self.ax[2].clear()  # Clear the previous plot
-        self.ax[2].plot(self.episode_df["action"])  # Plot the new data
-=======
-        self.ax[0].plot(self.episode_df[0])  # Plot the new data
-        self.ax[1].clear()  # Clear the previous plot
-        self.ax[1].plot(self.episode_df[1])  # Plot the new data
-        self.ax[2].clear()  # Clear the previous plot
-        self.ax[2].plot(self.episode_df[2])  # Plot the new data
->>>>>>> main
-        #        self.ax.set_title("Total Rewards per Episode")
-        #        self.ax.set_xlabel("Episode")
-        #        self.ax.set_ylabel("Total Reward")
+        rewards_by_episode = self.history.groupby("episode")["reward"].sum()
+        timesteps_by_episode = self.history.groupby("episode")["step"].sum()
+
+        alpha_by_episode = self.history.groupby("episode")["alpha"].mean()  # Average gamma per episode
+        gamma_by_episode = self.history.groupby("episode")["gamma"].mean()  # Average gamma per episode
+        epsilon_by_episode = self.history.groupby("episode")["epsilon"].mean()  # Average epsilon per episode
+
+        for ax in self.ax:
+            ax.clear()
+
+        self.ax[0].set_title("Total Rewards per Episode")
+        self.ax[0].set_xlabel("Episode")
+        self.ax[0].set_ylabel("Total Reward")
+        
+        self.ax[1].set_title("Timesteps per Episode")
+        self.ax[1].set_xlabel("Episode")
+        self.ax[1].set_ylabel("Timesteps")
+
+        self.ax[2].set_title("Gamma and Epsilon per Episode")
+        self.ax[2].set_xlabel("Episode")
+        self.ax[2].set_ylabel("Value")
+
+        self.ax[0].plot(rewards_by_episode)  # Plot the new data
+        self.ax[1].plot(timesteps_by_episode)  # Plot the new data
+        
+        self.ax[2].plot(alpha_by_episode, label="Alpha", color="green", linestyle="-.")
+        self.ax[2].plot(gamma_by_episode, label="Gamma", color="orange", linestyle="--")
+        self.ax[2].plot(epsilon_by_episode, label="Epsilon", color="red", linestyle="-")
+        self.ax[2].legend(loc="upper right")  # Add a legend to differentiate lines
+
         plt.draw()  # Redraw the plot
         plt.pause(0.1)  # Pause briefly to allow updates
 
@@ -162,11 +170,7 @@ class BaseAgent(ABC):
                 action = np.random.choice(len(probs), p=probs)  # Probs do not sum 1
                 return action
 
-<<<<<<< HEAD
         return policy_fn
-=======
-            return policy_fn
->>>>>>> main
 
     def print_policy(self, policy, height, width):
         switch_action = {
